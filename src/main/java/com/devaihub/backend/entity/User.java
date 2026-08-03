@@ -2,7 +2,7 @@ package com.devaihub.backend.entity;
 import com.devaihub.backend.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 @Entity
 @Table(name = "users")
 @Getter
@@ -10,6 +10,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+
 public class User extends BaseEntity {
     @Column(nullable = false)
     private String firstName;
@@ -23,6 +24,7 @@ public class User extends BaseEntity {
     @Column(nullable = false, unique = true)
     private String email;
 
+    @JsonIgnore
     @Column(nullable = false)
     private String password;
 
