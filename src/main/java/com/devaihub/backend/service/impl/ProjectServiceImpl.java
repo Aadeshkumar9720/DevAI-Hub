@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import com.devaihub.backend.entity.User;
 import com.devaihub.backend.repository.ProjectRepository;
 import com.devaihub.backend.repository.UserRepository;
-
+import java.util.List;
 
 @Service
 public class ProjectServiceImpl implements ProjectService {
@@ -39,5 +39,15 @@ public class ProjectServiceImpl implements ProjectService {
         project.setOwner(owner);
 
         return projectRepository.save(project);
+    }
+    @Override
+    public List<Project> getAllProjects() {
+        return projectRepository.findAll();
+    }
+
+    @Override
+    public Project getProjectById(Long id) {
+        return projectRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Project not found"));
     }
 }
