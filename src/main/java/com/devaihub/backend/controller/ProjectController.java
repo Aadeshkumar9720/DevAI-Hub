@@ -1,7 +1,7 @@
 package com.devaihub.backend.controller;
 
 import com.devaihub.backend.dto.CreateProjectRequest;
-import com.devaihub.backend.entity.Project;
+import com.devaihub.backend.response.ProjectResponse;
 import com.devaihub.backend.service.interfaces.ProjectService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
@@ -23,7 +23,7 @@ public class ProjectController {
     }
 
     @PostMapping
-    public Project createProject(
+    public ProjectResponse createProject(
             @Valid @RequestBody CreateProjectRequest request,
             Authentication authentication) {
 
@@ -33,7 +33,7 @@ public class ProjectController {
         );
     }
     @GetMapping
-    public ResponseEntity<ApiResponse<List<Project>>> getAllProjects() {
+    public ResponseEntity<ApiResponse<List<ProjectResponse>>> getAllProjects() {
 
         return ResponseEntity.ok(
                 new ApiResponse<>(
@@ -45,7 +45,7 @@ public class ProjectController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<Project>> getProjectById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<ProjectResponse>> getProjectById(@PathVariable Long id) {
 
         return ResponseEntity.ok(
                 new ApiResponse<>(

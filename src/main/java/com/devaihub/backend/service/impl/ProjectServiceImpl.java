@@ -2,6 +2,8 @@ package com.devaihub.backend.service.impl;
 
 import com.devaihub.backend.dto.CreateProjectRequest;
 import com.devaihub.backend.entity.Project;
+import com.devaihub.backend.mapper.ProjectMapper;
+import com.devaihub.backend.response.ProjectResponse;
 import com.devaihub.backend.service.interfaces.ProjectService;
 import org.springframework.stereotype.Service;
 import com.devaihub.backend.entity.User;
@@ -14,16 +16,17 @@ public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
-
+    private final ProjectMapper projectMapper;
     public ProjectServiceImpl(ProjectRepository projectRepository,
-                              UserRepository userRepository) {
+                              UserRepository userRepository,
+                              ProjectMapper projectMapper) {
 
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
+        this.projectMapper = projectMapper;
     }
-
     @Override
-    public Project createProject(CreateProjectRequest request, String username) {
+    public ProjectResponse createProject(CreateProjectRequest request, String username) {
 
         User owner = userRepository.findByUsername(username)
                 .orElseThrow(() ->
@@ -38,16 +41,26 @@ public class ProjectServiceImpl implements ProjectService {
         project.setEndDate(request.getEndDate());
         project.setOwner(owner);
 
-        return projectRepository.save(project);
+        Project savedProject = projectRepository.save(project);
+
+        return projectMapper.toResponse(savedProject);
     }
     @Override
-    public List<Project> getAllProjects() {
-        return projectRepository.findAll();
+    public List<ProjectResponse> getAllProjects() {
+
+        return projectRepository.findAll()
+                .stream()
+                .map(projectMapper::toResponse)
+                .toList();
     }
 
     @Override
-    public Project getProjectById(Long id) {
-        return projectRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+    public ProjectResponse getProjectById(Long id) {
+
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Project not found"));
+
+        return projectMapper.toResponse(project);
     }
 }

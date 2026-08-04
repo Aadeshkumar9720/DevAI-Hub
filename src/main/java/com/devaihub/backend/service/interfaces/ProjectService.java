@@ -1,13 +1,15 @@
 package com.devaihub.backend.service.interfaces;
 
 import com.devaihub.backend.dto.CreateProjectRequest;
-import com.devaihub.backend.entity.Project;
+import com.devaihub.backend.response.ProjectResponse;
+
 import java.util.List;
+
 public interface ProjectService {
 
-    Project createProject(CreateProjectRequest request, String username);
+    ProjectResponse createProject(CreateProjectRequest request, String username);
 
-    List<Project> getAllProjects();
+    List<ProjectResponse> getAllProjects();
 
-    Project getProjectById(Long id);
+    ProjectResponse getProjectById(Long id);
 }
