@@ -11,7 +11,7 @@ import org.springframework.http.ResponseEntity;
 import com.devaihub.backend.response.ApiResponse;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-
+import com.devaihub.backend.dto.UpdateProjectRequest;
 @RestController
 @RequestMapping("/api/v1/projects")
 public class ProjectController {
@@ -52,6 +52,24 @@ public class ProjectController {
                         true,
                         "Project fetched successfully",
                         projectService.getProjectById(id)
+                )
+        );
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<ProjectResponse>> updateProject(
+            @PathVariable Long id,
+            @Valid @RequestBody UpdateProjectRequest request,
+            Authentication authentication) {
+
+        return ResponseEntity.ok(
+                new ApiResponse<>(
+                        true,
+                        "Project updated successfully",
+                        projectService.updateProject(
+                                id,
+                                request,
+                                authentication.getName()
+                        )
                 )
         );
     }

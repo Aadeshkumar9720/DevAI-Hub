@@ -10,7 +10,7 @@ import com.devaihub.backend.entity.User;
 import com.devaihub.backend.repository.ProjectRepository;
 import com.devaihub.backend.repository.UserRepository;
 import java.util.List;
-
+import com.devaihub.backend.dto.UpdateProjectRequest;
 @Service
 public class ProjectServiceImpl implements ProjectService {
 
@@ -62,5 +62,46 @@ public class ProjectServiceImpl implements ProjectService {
                         new RuntimeException("Project not found"));
 
         return projectMapper.toResponse(project);
+    }
+    @Override
+    public ProjectResponse updateProject(
+            Long id,
+            UpdateProjectRequest request,
+            String username) {
+
+        // Find project
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Project not found"));
+
+        // Check owner
+        if (!project.getOwner().getUsername().equals(username)) {
+            throw new RuntimeException("You are not allowed to update this project");
+        }
+
+        // Update fields
+        project.setName(request.getName());
+        project.setDescription(request.getDescription());
+        project.setStatus(request.getStatus());
+        project.setStartDate(request.getStartDate());
+        project.setEndDate(request.getEndDate());
+
+        // Save and return DTO
+        Project updatedProject = projectRepository.save(project);
+
+        return projectMapper.toResponse(updatedProject);
+    }
+    @Override
+    public void deleteProject(Long id, String username) {
+
+        Project project = projectRepository.findById(id)
+                .orElseThrow(() ->
+                        new RuntimeException("Project not found"));
+
+        if (!project.getOwner().getUsername().equals(username)) {
+            throw new RuntimeException("You are not allowed to delete this project");
+        }
+
+        projectRepository.delete(project);
     }
 }
