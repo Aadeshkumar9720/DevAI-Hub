@@ -11,6 +11,10 @@ import com.devaihub.backend.repository.ProjectRepository;
 import com.devaihub.backend.repository.UserRepository;
 import java.util.List;
 import com.devaihub.backend.dto.UpdateProjectRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 @Service
 public class ProjectServiceImpl implements ProjectService {
 
@@ -103,5 +107,31 @@ public class ProjectServiceImpl implements ProjectService {
         }
 
         projectRepository.delete(project);
+    }
+    @Override
+    public List<ProjectResponse> searchProjects(String keyword) {
+
+        return projectRepository
+                .findByNameContainingIgnoreCase(keyword)
+                .stream()
+                .map(projectMapper::toResponse)
+                .toList();
+    }
+    @Override
+    public Page<ProjectResponse> getProjects(
+            int page,
+            int size,
+            String sortBy,
+            String direction
+    ) {
+
+        Sort sort = direction.equalsIgnoreCase("desc")
+                ? Sort.by(sortBy).descending()
+                : Sort.by(sortBy).ascending();
+
+        Pageable pageable = PageRequest.of(page, size, sort);
+
+        return projectRepository.findAll(pageable)
+                .map(projectMapper::toResponse);
     }
 }

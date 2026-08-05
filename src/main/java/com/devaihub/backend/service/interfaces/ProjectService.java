@@ -4,6 +4,7 @@ import com.devaihub.backend.dto.CreateProjectRequest;
 import com.devaihub.backend.response.ProjectResponse;
 import com.devaihub.backend.dto.UpdateProjectRequest;
 import java.util.List;
+import org.springframework.data.domain.Page;
 
 public interface ProjectService {
 
@@ -19,4 +20,12 @@ public interface ProjectService {
     );
 
     void deleteProject(Long id, String username);
+    List<ProjectResponse> searchProjects(String keyword);
+
+    Page<ProjectResponse> getProjects(
+            int page,
+            int size,
+            String sortBy,
+            String direction
+    );
 }
