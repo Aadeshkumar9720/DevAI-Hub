@@ -4,6 +4,9 @@ import com.devaihub.backend.dto.CreateTaskRequest;
 import com.devaihub.backend.response.ApiResponse;
 import com.devaihub.backend.response.TaskResponse;
 import com.devaihub.backend.service.interfaces.TaskService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -12,6 +15,10 @@ import java.util.List;
 import com.devaihub.backend.dto.UpdateTaskRequest;
 @RestController
 @RequestMapping("/api/v1/projects/{projectId}/tasks")
+@Tag(
+        name = "Task Management",
+        description = "Create and manage project tasks"
+)
 public class TaskController {
 
     private final TaskService taskService;
@@ -20,6 +27,20 @@ public class TaskController {
         this.taskService = taskService;
     }
 
+    @Operation(
+            summary = "Create Task",
+            description = "Creates a new task inside a project."
+    )
+    @ApiResponses({
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Task created successfully"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "Project not found"
+            )
+    })
     @PostMapping
     public ResponseEntity<ApiResponse<TaskResponse>> createTask(
             @PathVariable Long projectId,
@@ -39,6 +60,10 @@ public class TaskController {
                 )
         );
     }
+    @Operation(
+            summary = "Get All Tasks",
+            description = "Returns all tasks for the specified project."
+    )
     @GetMapping
     public ResponseEntity<ApiResponse<List<TaskResponse>>> getTasksByProject(
             @PathVariable Long projectId) {
@@ -52,7 +77,11 @@ public class TaskController {
         );
     }
 
-    @GetMapping("/{taskId}")
+    @Operation(
+            summary = "Get Task",
+            description = "Returns task details."
+    )
+    @GetMapping("{taskId}")
     public ResponseEntity<ApiResponse<TaskResponse>> getTaskById(
             @PathVariable Long taskId) {
 
@@ -64,7 +93,11 @@ public class TaskController {
                 )
         );
     }
-    @PutMapping("/{taskId}")
+    @Operation(
+            summary = "Update Task",
+            description = "Updates an existing task."
+    )
+    @PutMapping("{taskId}")
     public ResponseEntity<ApiResponse<TaskResponse>> updateTask(
             @PathVariable Long taskId,
             @Valid @RequestBody UpdateTaskRequest request,
@@ -83,7 +116,11 @@ public class TaskController {
                 )
         );
     }
-    @DeleteMapping("/{taskId}")
+    @Operation(
+            summary = "Delete Task",
+            description = "Deletes a task."
+    )
+    @DeleteMapping("{taskId}")
     public ResponseEntity<ApiResponse<String>> deleteTask(
             @PathVariable Long taskId,
             Authentication authentication
