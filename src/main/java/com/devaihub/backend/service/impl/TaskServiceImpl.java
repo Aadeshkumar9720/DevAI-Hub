@@ -4,30 +4,36 @@ import com.devaihub.backend.dto.CreateTaskRequest;
 import com.devaihub.backend.dto.UpdateTaskRequest;
 import com.devaihub.backend.entity.Project;
 import com.devaihub.backend.entity.Task;
+import com.devaihub.backend.enums.ActivityType;
 import com.devaihub.backend.mapper.TaskMapper;
 import com.devaihub.backend.repository.ProjectRepository;
 import com.devaihub.backend.repository.TaskRepository;
 import com.devaihub.backend.response.TaskResponse;
+import com.devaihub.backend.service.interfaces.ActivityService;
 import com.devaihub.backend.service.interfaces.TaskService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
+import com.devaihub.backend.response.NotificationResponse;
+import com.devaihub.backend.service.interfaces.NotificationService;
 @Service
 public class TaskServiceImpl implements TaskService {
 
     private final TaskRepository taskRepository;
     private final ProjectRepository projectRepository;
     private final TaskMapper taskMapper;
-
+    private final ActivityService activityService;
+    private final NotificationService notificationService;
     public TaskServiceImpl(
             TaskRepository taskRepository,
             ProjectRepository projectRepository,
-            TaskMapper taskMapper
+            TaskMapper taskMapper, ActivityService activityService,NotificationService notificationService
     ) {
         this.taskRepository = taskRepository;
         this.projectRepository = projectRepository;
         this.taskMapper = taskMapper;
+        this.activityService = activityService;
+        this.notificationService = notificationService;
     }
 
     @Override
@@ -53,7 +59,19 @@ public class TaskServiceImpl implements TaskService {
         task.setProject(project);
 
         Task savedTask = taskRepository.save(task);
-
+        activityService.logActivity(
+                project,
+                project.getOwner(),
+                ActivityType.TASK_CREATED,
+                "Task '" + savedTask.getTitle() + "' was created."
+        );
+        notificationService.sendNotification(
+                new NotificationResponse(
+                        "New Task",
+                        "Task '" + savedTask.getTitle() + "' has been created.",
+                        "TASK_CREATED"
+                )
+        );
         return taskMapper.toResponse(savedTask);
     }
     @Override
@@ -94,7 +112,18 @@ public class TaskServiceImpl implements TaskService {
         task.setStatus(request.getStatus());
 
         Task updatedTask = taskRepository.save(task);
-
+        activityService.logActivity(
+                task.getProject(),
+                task.getProject().getOwner(),
+                ActivityType.TASK_UPDATED,
+                "Task '" + updatedTask.getTitle() + "' was updated."
+        );
+        activityService.logActivity(
+                task.getProject(),
+                task.getProject().getOwner(),
+                ActivityType.TASK_UPDATED,
+                "Task '" + updatedTask.getTitle() + "' was updated."
+        );
         return taskMapper.toResponse(updatedTask);
     }
 

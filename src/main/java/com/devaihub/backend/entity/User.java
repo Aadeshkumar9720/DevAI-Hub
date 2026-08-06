@@ -3,6 +3,8 @@ import com.devaihub.backend.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import java.util.ArrayList;
+import java.util.List;
 @Entity
 @Table(name = "users")
 @Getter
@@ -34,4 +36,11 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private Role role;
+
+    @OneToMany(
+            mappedBy = "user",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<ProjectMember> projectMemberships = new ArrayList<>();
 }

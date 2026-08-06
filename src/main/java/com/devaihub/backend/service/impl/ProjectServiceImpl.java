@@ -2,6 +2,7 @@ package com.devaihub.backend.service.impl;
 
 import com.devaihub.backend.dto.CreateProjectRequest;
 import com.devaihub.backend.entity.Project;
+import com.devaihub.backend.enums.ActivityType;
 import com.devaihub.backend.mapper.ProjectMapper;
 import com.devaihub.backend.response.ProjectResponse;
 import com.devaihub.backend.service.interfaces.ProjectService;
@@ -15,19 +16,23 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import com.devaihub.backend.service.interfaces.ActivityService;
+import com.devaihub.backend.enums.ActivityType;
 @Service
 public class ProjectServiceImpl implements ProjectService {
 
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final ProjectMapper projectMapper;
+    private final ActivityService activityService;
     public ProjectServiceImpl(ProjectRepository projectRepository,
                               UserRepository userRepository,
-                              ProjectMapper projectMapper) {
+                              ProjectMapper projectMapper, ActivityService activityService) {
 
         this.projectRepository = projectRepository;
         this.userRepository = userRepository;
         this.projectMapper = projectMapper;
+        this.activityService = activityService;
     }
     @Override
     public ProjectResponse createProject(CreateProjectRequest request, String username) {
@@ -46,7 +51,12 @@ public class ProjectServiceImpl implements ProjectService {
         project.setOwner(owner);
 
         Project savedProject = projectRepository.save(project);
-
+        activityService.logActivity(
+                savedProject,
+                owner,
+                ActivityType.PROJECT_CREATED,
+                "Project '" + savedProject.getName() + "' was created."
+        );
         return projectMapper.toResponse(savedProject);
     }
     @Override

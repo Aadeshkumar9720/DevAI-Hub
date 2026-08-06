@@ -1,0 +1,24 @@
+package com.devaihub.backend.enums;
+
+public enum ActivityType {
+
+    PROJECT_CREATED,
+
+    PROJECT_UPDATED,
+
+    PROJECT_MEMBER_ADDED,
+
+    PROJECT_MEMBER_REMOVED,
+
+    TASK_CREATED,
+
+    TASK_UPDATED,
+
+    TASK_DELETED,
+
+    COMMENT_ADDED,
+
+    ATTACHMENT_UPLOADED,
+
+    ATTACHMENT_DELETED
+}
