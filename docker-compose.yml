@@ -1,0 +1,36 @@
+version: '3.9'
+
+services:
+
+  postgres:
+    image: postgres:16
+    container_name: devaihub-postgres
+
+    environment:
+      POSTGRES_DB: devaihub
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Aarti@8737
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  backend:
+    build: .
+    container_name: devaihub-backend
+
+    depends_on:
+      - postgres
+
+    ports:
+      - "8081:8081"
+
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/devaihub
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: Aarti@8737
+
+volumes:
+  postgres-data:
