@@ -7,12 +7,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class TaskMapper {
 
-    private final ProjectMapper projectMapper;
-
-    public TaskMapper(ProjectMapper projectMapper) {
-        this.projectMapper = projectMapper;
-    }
-
     public TaskResponse toResponse(Task task) {
 
         TaskResponse response = new TaskResponse();
@@ -21,7 +15,13 @@ public class TaskMapper {
         response.setTitle(task.getTitle());
         response.setDescription(task.getDescription());
         response.setStatus(task.getStatus());
-        response.setProject(projectMapper.toResponse(task.getProject()));
+
+        if (task.getProject() != null) {
+            response.setProjectId(task.getProject().getId());
+        }
+
+        response.setCreatedAt(task.getCreatedAt());
+        response.setUpdatedAt(task.getUpdatedAt());
 
         return response;
     }

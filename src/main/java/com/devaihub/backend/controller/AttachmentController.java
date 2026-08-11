@@ -3,91 +3,116 @@ package com.devaihub.backend.controller;
 import com.devaihub.backend.response.ApiResponse;
 import com.devaihub.backend.response.AttachmentResponse;
 import com.devaihub.backend.service.interfaces.AttachmentService;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.util.List;
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/tasks/{taskId}/attachments")
-@Tag(
-        name = "Attachments",
-        description = "Upload and manage task attachments"
-)
+@RequestMapping("/api/v1/attachments")
 public class AttachmentController {
 
     private final AttachmentService attachmentService;
 
-    public AttachmentController(AttachmentService attachmentService) {
+    public AttachmentController(
+            AttachmentService attachmentService
+    ) {
         this.attachmentService = attachmentService;
     }
-    @Operation(
-            summary = "Upload Attachment",
-            description = "Uploads a file to a task."
-    )
-    @PostMapping(consumes = "multipart/form-data")
-    public ResponseEntity<ApiResponse<AttachmentResponse>> uploadFile(
-            @PathVariable Long taskId,
-            @RequestParam("file") MultipartFile file,
-            Authentication authentication
+
+    // =========================================================
+    // OPEN ATTACHMENT IN BROWSER
+    // =========================================================
+
+    @GetMapping("/{attachmentId}/open")
+    public ResponseEntity<Resource> openAttachment(
+            @PathVariable Long attachmentId
     ) {
 
-        return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        "File uploaded successfully",
-                        attachmentService.uploadFile(
-                                taskId,
-                                file,
-                                authentication.getName()
-                        )
+        AttachmentResponse attachment =
+                attachmentService.getAttachment(
+                        attachmentId
+                );
+
+        Resource resource =
+                attachmentService.getAttachmentFile(
+                        attachmentId
+                );
+
+        MediaType mediaType =
+                getMediaType(
+                        attachment.getFileType()
+                );
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "inline; filename=\"" +
+                                attachment.getFileName() +
+                                "\""
                 )
-        );
+                .body(resource);
     }
 
-    @Operation(
-            summary = "Get Attachments",
-            description = "Returns all attachments of a task."
-    )
-    @GetMapping
-    public ResponseEntity<ApiResponse<List<AttachmentResponse>>> getAttachments(
-            @PathVariable Long taskId
+    // =========================================================
+    // DOWNLOAD ATTACHMENT
+    // =========================================================
+
+    @GetMapping("/{attachmentId}/download")
+    public ResponseEntity<Resource> downloadAttachment(
+            @PathVariable Long attachmentId
     ) {
 
-        return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        "Attachments fetched successfully",
-                        attachmentService.getAttachments(taskId)
+        AttachmentResponse attachment =
+                attachmentService.getAttachment(
+                        attachmentId
+                );
+
+        Resource resource =
+                attachmentService.getAttachmentFile(
+                        attachmentId
+                );
+
+        MediaType mediaType =
+                getMediaType(
+                        attachment.getFileType()
+                );
+
+        return ResponseEntity.ok()
+                .contentType(mediaType)
+                .header(
+                        HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename=\"" +
+                                attachment.getFileName() +
+                                "\""
                 )
-        );
+                .body(resource);
     }
 
-    @Operation(
-            summary = "Delete Attachment",
-            description = "Deletes an attachment."
-    )
-    @DeleteMapping("/{attachmentId}")
-    public ResponseEntity<ApiResponse<String>> deleteAttachment(
-            @PathVariable Long attachmentId,
-            Authentication authentication
+    // =========================================================
+    // MEDIA TYPE
+    // =========================================================
+
+    private MediaType getMediaType(
+            String fileType
     ) {
 
-        attachmentService.deleteAttachment(
-                attachmentId,
-                authentication.getName()
-        );
+        if (fileType == null ||
+                fileType.isBlank()) {
 
-        return ResponseEntity.ok(
-                new ApiResponse<>(
-                        true,
-                        "Attachment deleted successfully",
-                        null
-                )
-        );
+            return MediaType.APPLICATION_OCTET_STREAM;
+        }
+
+        try {
+            return MediaType.parseMediaType(
+                    fileType
+            );
+        } catch (Exception e) {
+
+            return MediaType.APPLICATION_OCTET_STREAM;
+        }
     }
 }

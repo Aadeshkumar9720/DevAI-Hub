@@ -11,6 +11,7 @@ import com.devaihub.backend.response.LoginResponse;
 import com.devaihub.backend.response.ApiResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import org.springframework.web.bind.annotation.RequestParam;
 @RestController
 @RequestMapping("/api/v1/auth")
 @Tag(
@@ -76,6 +77,42 @@ public class AuthController {
                 true,
                 "Login successful",
                 response
+        );
+    }
+    @Operation(
+            summary = "Forgot Password",
+            description = "Sends a password reset link to the user's email."
+    )
+    @PostMapping("/forgot-password")
+    public ApiResponse forgotPassword(
+            @RequestParam String email) {
+
+        userService.forgotPassword(email);
+
+        return new ApiResponse(
+                true,
+                "Password reset link sent successfully",
+                null
+        );
+    }
+    @Operation(
+            summary = "Reset Password",
+            description = "Resets the user's password using a valid reset token."
+    )
+    @PostMapping("/reset-password")
+    public ApiResponse resetPassword(
+            @RequestParam String token,
+            @RequestParam String newPassword) {
+
+        userService.resetPassword(
+                token,
+                newPassword
+        );
+
+        return new ApiResponse(
+                true,
+                "Password reset successfully",
+                null
         );
     }
 }

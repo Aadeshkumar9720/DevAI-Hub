@@ -4,6 +4,8 @@ import com.devaihub.backend.entity.TaskStatus;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
+
 @Getter
 @Setter
 public class TaskResponse {
@@ -16,6 +18,9 @@ public class TaskResponse {
 
     private TaskStatus status;
 
-    private ProjectResponse project;
+    private Long projectId;
 
+    private LocalDateTime createdAt;
+
+    private LocalDateTime updatedAt;
 }

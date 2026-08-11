@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import com.devaihub.backend.service.interfaces.ActivityService;
 import com.devaihub.backend.enums.ActivityType;
+import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ProjectServiceImpl implements ProjectService {
 
@@ -34,6 +35,7 @@ public class ProjectServiceImpl implements ProjectService {
         this.projectMapper = projectMapper;
         this.activityService = activityService;
     }
+    @Transactional
     @Override
     public ProjectResponse createProject(CreateProjectRequest request, String username) {
 
@@ -59,6 +61,7 @@ public class ProjectServiceImpl implements ProjectService {
         );
         return projectMapper.toResponse(savedProject);
     }
+    @Transactional(readOnly = true)
     @Override
     public List<ProjectResponse> getAllProjects() {
 
@@ -67,7 +70,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .map(projectMapper::toResponse)
                 .toList();
     }
-
+    @Transactional(readOnly = true)
     @Override
     public ProjectResponse getProjectById(Long id) {
 
@@ -77,6 +80,7 @@ public class ProjectServiceImpl implements ProjectService {
 
         return projectMapper.toResponse(project);
     }
+    @Transactional
     @Override
     public ProjectResponse updateProject(
             Long id,
@@ -105,19 +109,30 @@ public class ProjectServiceImpl implements ProjectService {
 
         return projectMapper.toResponse(updatedProject);
     }
+    @Transactional
     @Override
-    public void deleteProject(Long id, String username) {
+    public void deleteProject(
+            Long projectId,
+            String username) {
 
-        Project project = projectRepository.findById(id)
+        Project project = projectRepository.findById(projectId)
                 .orElseThrow(() ->
-                        new RuntimeException("Project not found"));
+                        new RuntimeException("Project not found")
+                );
 
-        if (!project.getOwner().getUsername().equals(username)) {
-            throw new RuntimeException("You are not allowed to delete this project");
+        // Only project owner can delete the project
+        if (!project.getOwner()
+                .getUsername()
+                .equals(username)) {
+
+            throw new RuntimeException(
+                    "You are not allowed to delete this project"
+            );
         }
 
         projectRepository.delete(project);
     }
+    @Transactional
     @Override
     public List<ProjectResponse> searchProjects(String keyword) {
 
@@ -127,6 +142,7 @@ public class ProjectServiceImpl implements ProjectService {
                 .map(projectMapper::toResponse)
                 .toList();
     }
+    @Transactional
     @Override
     public Page<ProjectResponse> getProjects(
             int page,
@@ -144,4 +160,5 @@ public class ProjectServiceImpl implements ProjectService {
         return projectRepository.findAll(pageable)
                 .map(projectMapper::toResponse);
     }
+
 }

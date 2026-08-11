@@ -80,7 +80,7 @@ public class ProjectController {
             @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Project not found")
     })
     @GetMapping("/{projectId}")
-    public ResponseEntity<ApiResponse<ProjectResponse>> getProjectById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<ProjectResponse>> getProjectById(@PathVariable("projectId") Long id) {
 
         return ResponseEntity.ok(
                 new ApiResponse<>(
@@ -100,7 +100,7 @@ public class ProjectController {
     })
     @PutMapping("/{projectId}")
     public ResponseEntity<ApiResponse<ProjectResponse>> updateProject(
-            @PathVariable Long id,
+            @PathVariable("projectId") Long id,
             @Valid @RequestBody UpdateProjectRequest request,
             Authentication authentication) {
 
@@ -121,15 +121,28 @@ public class ProjectController {
             description = "Deletes a project."
     )
     @ApiResponses({
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Project deleted successfully"),
-            @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Project not found")
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "200",
+                    description = "Project deleted successfully"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "404",
+                    description = "Project not found"
+            ),
+            @io.swagger.v3.oas.annotations.responses.ApiResponse(
+                    responseCode = "401",
+                    description = "Unauthorized"
+            )
     })
     @DeleteMapping("/{projectId}")
     public ResponseEntity<ApiResponse<Void>> deleteProject(
-            @PathVariable Long id,
+            @PathVariable("projectId") Long projectId,
             Authentication authentication) {
 
-        projectService.deleteProject(id, authentication.getName());
+        projectService.deleteProject(
+                projectId,
+                authentication.getName()
+        );
 
         return ResponseEntity.ok(
                 new ApiResponse<>(

@@ -18,7 +18,7 @@ import com.devaihub.backend.service.interfaces.ActivityService;
 import java.util.List;
 import com.devaihub.backend.response.NotificationResponse;
 import com.devaihub.backend.service.interfaces.NotificationService;
-
+import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ProjectMemberServiceImpl implements ProjectMemberService {
 
@@ -44,12 +44,17 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     }
 
     @Override
+    @Transactional
     public ProjectMemberResponse addMember(
             Long projectId,
             AddMemberRequest request,
             String username
     ) {
-
+        System.out.println("====================================");
+        System.out.println("ADD MEMBER DEBUG");
+        System.out.println("PROJECT ID = " + projectId);
+        System.out.println("PROJECT COUNT = " + projectRepository.count());
+        System.out.println("PROJECT EXISTS = " + projectRepository.existsById(projectId));
         Project project = projectRepository.findById(projectId)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
 
@@ -83,16 +88,20 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
         notificationService.sendNotification(
                 new NotificationResponse(
                         "Project Member Added",
-                        user.getUsername() + " joined the project as " + saved.getRole().name(),
+                        user.getUsername() + " joined the project as "
+                                + saved.getRole().name(),
                         "MEMBER_ADDED"
-                )
+                ),
+                user.getUsername()
         );
         return memberMapper.toResponse(saved);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProjectMemberResponse> getMembers(Long projectId) {
-
+        System.out.println("========== GET MEMBERS SERVICE ==========");
+        System.out.println("PROJECT ID = " + projectId);
         return memberRepository.findByProjectId(projectId)
                 .stream()
                 .map(memberMapper::toResponse)
@@ -100,6 +109,7 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
     }
 
     @Override
+    @Transactional
     public void removeMember(Long projectMemberId, String username) {
 
         ProjectMember member = memberRepository.findById(projectMemberId)
@@ -117,9 +127,11 @@ public class ProjectMemberServiceImpl implements ProjectMemberService {
         notificationService.sendNotification(
                 new NotificationResponse(
                         "Project Member Removed",
-                        member.getUser().getUsername() + " was removed from the project.",
+                        member.getUser().getUsername()
+                                + " was removed from the project.",
                         "MEMBER_REMOVED"
-                )
+                ),
+                member.getUser().getUsername()
         );
         memberRepository.delete(member);
     }

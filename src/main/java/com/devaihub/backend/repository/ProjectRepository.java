@@ -1,6 +1,8 @@
 package com.devaihub.backend.repository;
 import com.devaihub.backend.entity.Project;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import com.devaihub.backend.entity.User;
 import java.util.List;
@@ -18,4 +20,11 @@ public interface ProjectRepository extends JpaRepository<Project,Long>{
             String username,
             ProjectStatus status
     );
+    @Query("""
+    SELECT p
+    FROM Project p
+    JOIN FETCH p.owner
+    WHERE p.id = :id
+""")
+    Optional<Project> findByIdWithOwner(@Param("id") Long id);
 }

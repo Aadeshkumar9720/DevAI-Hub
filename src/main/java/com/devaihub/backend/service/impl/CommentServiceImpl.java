@@ -19,6 +19,7 @@ import com.devaihub.backend.enums.ActivityType;
 import com.devaihub.backend.service.interfaces.ActivityService;
 import com.devaihub.backend.response.NotificationResponse;
 import com.devaihub.backend.service.interfaces.NotificationService;
+import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CommentServiceImpl implements CommentService {
 
@@ -43,7 +44,7 @@ public class CommentServiceImpl implements CommentService {
         this.activityService = activityService;
         this.notificationService=notificationService;
     }
-
+    @Transactional
     @Override
     public CommentResponse createComment(
             Long taskId,
@@ -77,11 +78,12 @@ public class CommentServiceImpl implements CommentService {
                         "New Comment",
                         "A new comment was added to task '" + task.getTitle() + "'.",
                         "COMMENT_ADDED"
-                )
+                ),
+                task.getProject().getOwner().getUsername()
         );
         return commentMapper.toResponse(savedComment);
     }
-
+    @Transactional
     @Override
     public List<CommentResponse> getCommentsByTask(Long taskId) {
 

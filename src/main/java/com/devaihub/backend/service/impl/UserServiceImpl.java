@@ -12,6 +12,12 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import com.devaihub.backend.service.interfaces.EmailService;
+import com.devaihub.backend.entity.PasswordResetToken;
+import com.devaihub.backend.repository.PasswordResetTokenRepository;
+
+import java.time.LocalDateTime;
+import java.util.UUID;
+import org.springframework.transaction.annotation.Transactional;
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -21,17 +27,21 @@ public class UserServiceImpl implements UserService {
     private final AuthenticationManager authenticationManager;
     private final JwtService jwtService;
     private final EmailService emailService;
+    private final PasswordResetTokenRepository passwordResetTokenRepository;
     public UserServiceImpl(
             UserRepository userRepository,
             PasswordEncoder passwordEncoder,
             AuthenticationManager authenticationManager,
-            JwtService jwtService,EmailService emailService) {
+            JwtService jwtService,EmailService emailService,
+            PasswordResetTokenRepository passwordResetTokenRepository) {
 
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.authenticationManager = authenticationManager;
         this.jwtService = jwtService;
         this.emailService = emailService;
+        this.passwordResetTokenRepository =
+                passwordResetTokenRepository;
 
     }
     @Override
@@ -140,6 +150,131 @@ Team DevAI Hub
         );
 
         return savedUser;
+    }
+
+    @Override
+    @Transactional
+    public void forgotPassword(String email) {
+
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() ->
+                        new RuntimeException("User not found")
+                );
+
+        // Remove previous reset tokens for this user
+        passwordResetTokenRepository.deleteByUserId(
+                user.getId()
+        );
+
+        String token = UUID.randomUUID().toString();
+
+        PasswordResetToken resetToken =
+                new PasswordResetToken();
+
+        resetToken.setToken(token);
+        resetToken.setUser(user);
+        resetToken.setExpiryDate(
+                LocalDateTime.now().plusMinutes(15)
+        );
+
+        passwordResetTokenRepository.save(resetToken);
+
+        String resetLink =
+                "http://localhost:5173/reset-password?token="
+                        + token;
+
+        String html = """
+            <html>
+            <body>
+                <h2>Reset Your DevAI Hub Password</h2>
+
+                <p>Hello %s,</p>
+
+                <p>
+                    We received a request to reset your
+                    DevAI Hub password.
+                </p>
+
+                <p>
+                    Click the button below to reset your password:
+                </p>
+
+                <p>
+                    <a href="%s"
+                       style="
+                       display:inline-block;
+                       padding:12px 20px;
+                       background:#4f46e5;
+                       color:white;
+                       text-decoration:none;
+                       border-radius:6px;">
+                       Reset Password
+                    </a>
+                </p>
+
+                <p>
+                    This link will expire in
+                    <strong>15 minutes</strong>.
+                </p>
+
+                <p>
+                    If you did not request a password reset,
+                    you can safely ignore this email.
+                </p>
+
+                <p>
+                    Regards,<br>
+                    DevAI Hub Team
+                </p>
+            </body>
+            </html>
+            """.formatted(
+                user.getFirstName(),
+                resetLink
+        );
+
+        emailService.sendHtmlEmail(
+                user.getEmail(),
+                "Reset Your DevAI Hub Password",
+                html
+        );
+    }
+    @Override
+    @Transactional
+    public void resetPassword(
+            String token,
+            String newPassword
+    ) {
+
+        PasswordResetToken resetToken =
+                passwordResetTokenRepository
+                        .findByToken(token)
+                        .orElseThrow(() ->
+                                new RuntimeException(
+                                        "Invalid or expired reset token"
+                                )
+                        );
+
+        if (resetToken.getExpiryDate()
+                .isBefore(LocalDateTime.now())) {
+
+            passwordResetTokenRepository.delete(resetToken);
+
+            throw new RuntimeException(
+                    "Reset token has expired"
+            );
+        }
+
+        User user = resetToken.getUser();
+
+        user.setPassword(
+                passwordEncoder.encode(newPassword)
+        );
+
+        userRepository.save(user);
+
+        // Token can only be used once
+        passwordResetTokenRepository.delete(resetToken);
     }
 
 }

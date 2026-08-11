@@ -11,7 +11,7 @@ import com.devaihub.backend.service.interfaces.ActivityService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-
+import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ActivityServiceImpl implements ActivityService {
 
@@ -45,10 +45,11 @@ public class ActivityServiceImpl implements ActivityService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ActivityResponse> getProjectActivities(Long projectId) {
 
         return activityRepository
-                .findByProjectIdOrderByCreatedAtDesc(projectId)
+                .findByProjectIdWithPerformedBy(projectId)
                 .stream()
                 .map(activityMapper::toResponse)
                 .toList();

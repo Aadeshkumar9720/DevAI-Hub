@@ -23,7 +23,11 @@ import com.devaihub.backend.enums.ActivityType;
 import com.devaihub.backend.service.interfaces.ActivityService;
 import com.devaihub.backend.response.NotificationResponse;
 import com.devaihub.backend.service.interfaces.NotificationService;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.FileSystemResource;
 @Service
+@Transactional
 public class AttachmentServiceImpl implements AttachmentService {
 
     private static final String UPLOAD_DIR = "uploads";
@@ -48,7 +52,7 @@ public class AttachmentServiceImpl implements AttachmentService {
         this.activityService = activityService;
         this.notificationService=notificationService;
     }
-
+    @Transactional
     @Override
     public AttachmentResponse uploadFile(
             Long taskId,
@@ -91,13 +95,13 @@ public class AttachmentServiceImpl implements AttachmentService {
                     ActivityType.ATTACHMENT_UPLOADED,
                     "Attachment '" + saved.getFileName() + "' uploaded."
             );
-
             notificationService.sendNotification(
                     new NotificationResponse(
                             "Attachment Uploaded",
                             "File '" + saved.getFileName() + "' uploaded.",
                             "ATTACHMENT_UPLOADED"
-                    )
+                    ),
+                    task.getProject().getOwner().getUsername()
             );
             return attachmentMapper.toResponse(saved);
 
@@ -105,7 +109,7 @@ public class AttachmentServiceImpl implements AttachmentService {
             throw new RuntimeException("File upload failed");
         }
     }
-
+    @Transactional
     @Override
     public List<AttachmentResponse> getAttachments(Long taskId) {
 
@@ -114,7 +118,7 @@ public class AttachmentServiceImpl implements AttachmentService {
                 .map(attachmentMapper::toResponse)
                 .toList();
     }
-
+    @Transactional
     @Override
     public void deleteAttachment(Long attachmentId, String username) {
 
@@ -132,5 +136,45 @@ public class AttachmentServiceImpl implements AttachmentService {
         }
 
         attachmentRepository.delete(attachment);
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public Resource getAttachmentFile(Long attachmentId) {
+
+        Attachment attachment = attachmentRepository
+                .findById(attachmentId)
+                .orElseThrow(() ->
+                        new RuntimeException("Attachment not found"));
+
+        Path path = Path.of(
+                attachment.getFilePath()
+        ).toAbsolutePath().normalize();
+
+        if (!Files.exists(path)) {
+            throw new RuntimeException(
+                    "Attachment file not found"
+            );
+        }
+
+        if (!Files.isRegularFile(path)) {
+            throw new RuntimeException(
+                    "Attachment path is not a file"
+            );
+        }
+
+        return new FileSystemResource(path);
+    }
+    @Override
+    @Transactional(readOnly = true)
+    public AttachmentResponse getAttachment(
+            Long attachmentId
+    ) {
+
+        Attachment attachment = attachmentRepository
+                .findById(attachmentId)
+                .orElseThrow(() ->
+                        new RuntimeException("Attachment not found"));
+
+        return attachmentMapper.toResponse(attachment);
     }
 }
